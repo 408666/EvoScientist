@@ -116,14 +116,15 @@ def resolve_media_path(
     media_dir: str | Path | None = None,
     routes: dict[str, Any] | None = None,
     dangerous: bool = False,
+    tool_name: str | None = None,
 ) -> str:
     """The file on disk a file tool's *path* names, or ``""`` if there is none.
 
     The path is mapped as the sandbox maps it (see
     :func:`~EvoScientist.backends.sandbox_file_path`), so only a file inside
-    ``work_dir`` or ``media_dir`` is found, and a system path the sandbox
-    reads as a workspace basename names that workspace file, never the host
-    file. In dangerous mode a host path is the real file it names. A path
+    ``work_dir`` or ``media_dir`` is found, and a host-looking path names the
+    workspace file at that path as written, never the host file. In
+    dangerous mode a host path is the real file it names. A path
     under one of the agent's *routes* names that route's tier file instead.
     """
     if work_dir is None:
@@ -131,7 +132,12 @@ def resolve_media_path(
     from ..backends import sandbox_file_path
 
     real_path = sandbox_file_path(
-        path, work_dir, media_dir=media_dir, dangerous=dangerous, routes=routes
+        path,
+        work_dir,
+        media_dir=media_dir,
+        dangerous=dangerous,
+        routes=routes,
+        tool_name=tool_name,
     )
     return str(real_path) if real_path is not None and real_path.is_file() else ""
 
@@ -169,7 +175,12 @@ def forward_media_result(
     if os.path.splitext(path)[1].lower() not in _MEDIA_EXTENSIONS:
         return
     real_path = resolve_media_path(
-        path, work_dir, media_dir=media_dir, dangerous=dangerous, routes=routes
+        path,
+        work_dir,
+        media_dir=media_dir,
+        dangerous=dangerous,
+        routes=routes,
+        tool_name=event.get("name"),
     )
     if real_path:
         media_sent.add(path)
